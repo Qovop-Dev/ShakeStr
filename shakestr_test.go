@@ -16,10 +16,17 @@ func TestShakeforWord(t *testing.T) {
 		{"Go", "wwww", "", "parameter length is not valid, got: wwww"},
 		//shuffle middle of the word
 		{"Ace", "wm", "Ace", ""},
+		{"(Ace)", "wm", "(Ace)", ""},
+		{"(Ace", "wm", "(Ace", ""},
+		{"Ace)", "wm", "Ace)", ""},
 		{"Ace!", "wm", "Ace!", ""},
+		{"Ace !", "wm", "Ace !", ""},
+		{"{Ace!}", "wm", "{Ace!}", ""},
 		{"Go", "wm", "Go", ""},
 		{"Go?", "wm", "Go?", ""},
+		{"'Go ?'", "wm", "'Go ?'", ""},
 		{"G", "wm", "G", ""},
+		{"[G", "wm", "[G", ""},
 		{"Test", "wm", "Tset", ""},
 		{"Test.", "wm", "Tset.", ""},
 		{"Test", "Wm", "Tset", ""},
@@ -31,9 +38,15 @@ func TestShakeforWord(t *testing.T) {
 		{"Invalid Test", "wm", "", "input must be a single word without spaces, got: Invalid Test"},
 		//shuffle the full word
 		{"G", "wf", "G", ""},
+		{"(G)", "wf", "(G)", ""},
 		{"G!", "wf", "G!", ""},
+		{"G !", "wf", "G !", ""},
 		{"Go", "wf", "oG", ""},
+		{"(Go", "wf", "(oG", ""},
+		{"Go)", "wf", "oG)", ""},
 		{"Go?", "wf", "oG?", ""},
+		{"Go ?", "wf", "oG ?", ""},
+		{"(Go ?)", "wf", "(oG ?)", ""},
 		{"Go", "Wf", "oG", ""},
 		{" Go ", "Wf", "oG", ""},
 		{"oo", "Wf", "oo", "the word cannot be shuffled because it contains identical letters"},
@@ -80,9 +93,13 @@ func TestShakeforText(t *testing.T) {
 		//shuffle middle word mode
 		{"Give me your gift.", "tm", "Gvie me yuor gfit.", ""},
 		{"Help me!", "tmp", "me! Hlep", ""},
+		{"Help !", "tmp", "! Hlep", ""},
+		{"Help (me!)", "tmp", "(me!) Hlep", ""},
 		//shuffle full word mode
 		{"He is so up!", "tf", "eH si os pu!", ""},
 		{"To me!", "tfp", "em! oT", ""},
+		{"To (me!)", "tfp", "(em!) oT", ""},
+		{"To !", "tfp", "! oT", ""},
 		//shuffle word place
 		{"Hello, you!", "tp", "you! Hello,", ""},
 	}

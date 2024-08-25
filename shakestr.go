@@ -167,27 +167,12 @@ func shakeText(s string, shakeMethod string, shakeMethodOpt string) (string, err
 }
 
 func shakeWord(s string, p string) (string, error) {
-	// convert to rune
-	runes := []rune(strings.TrimSpace(s))
+
+	// check for Parentheses, Brackets, Quote, or ponctuations
+	runes, prefix, suffix := checkSpecial(s)
 
 	// buffer variable to work on
 	var bufferRunes []rune
-
-	//exclude ponctuation
-	ponctuation := ""
-	ponc := 0
-	if unicode.IsPunct(runes[len(runes)-1]) {
-		// buffer variable to work on
-		bufferRunes = make([]rune, len(runes)-1)
-		// separating the ponctuation from the word
-		ponc = 1
-		ponctuation = string(runes[len(runes)-1])
-		copy(bufferRunes, runes[:(len(runes)-1)])
-	} else {
-		// buffer variable to work on
-		bufferRunes = make([]rune, len(runes))
-		copy(bufferRunes, runes)
-	}
 
 	// Check if it contains any spaces
 	if strings.Contains(string(runes), " ") {
@@ -196,15 +181,19 @@ func shakeWord(s string, p string) (string, error) {
 
 	// check word length
 	if p == middleParam {
-		if len(runes) <= (3 + ponc) {
-			return string(runes), nil
+		if len(runes) <= 3 {
+			return (prefix + string(runes) + suffix), nil
 		}
 		// Shake runes between first and last letter
-		bufferRunes = runes[1 : len(runes)-1-ponc]
+		bufferRunes = make([]rune, len(runes[1:len(runes)-1]))
+		copy(bufferRunes, runes[1:len(runes)-1])
 	} else {
-		if (len(runes) == 1) || (len(runes) == 2 && ponc == 1) {
-			return string(runes), nil
+		if len(runes) == 1 {
+			return (prefix + string(runes) + suffix), nil
 		}
+		// Shake all runes
+		bufferRunes = make([]rune, len(runes))
+		copy(bufferRunes, runes)
 	}
 
 	//check bufferRunes has different letters
@@ -217,9 +206,9 @@ func shakeWord(s string, p string) (string, error) {
 	}
 	if !valid {
 		if p == middleParam {
-			return string(runes), fmt.Errorf("the word cannot be shuffled because it contains identical adjacent letters in the middle")
+			return (prefix + string(runes) + suffix), fmt.Errorf("the word cannot be shuffled because it contains identical adjacent letters in the middle")
 		} else {
-			return string(runes), fmt.Errorf("the word cannot be shuffled because it contains identical letters")
+			return (prefix + string(runes) + suffix), fmt.Errorf("the word cannot be shuffled because it contains identical letters")
 		}
 	}
 
@@ -228,8 +217,8 @@ func shakeWord(s string, p string) (string, error) {
 	copy(original, bufferRunes)
 
 	// Loop until the shuffle changes the order of the middle letters
+	rand.Seed(uint64(time.Now().UnixNano()))
 	for {
-		rand.Seed(uint64(time.Now().UnixNano()))
 		rand.Shuffle(len(bufferRunes), func(i, j int) {
 			bufferRunes[i], bufferRunes[j] = bufferRunes[j], bufferRunes[i]
 		})
@@ -252,12 +241,72 @@ func shakeWord(s string, p string) (string, error) {
 	// Rebuild the word
 	var shaked string
 	if p == middleParam {
-		shaked = string(runes[0]) + string(bufferRunes) + string(runes[len(runes)-1-ponc]) + ponctuation
+		shaked = prefix + string(runes[0]) + string(bufferRunes) + string(runes[len(runes)-1]) + suffix
 	} else {
-		shaked = string(bufferRunes) + ponctuation
+		shaked = prefix + string(bufferRunes) + suffix
 	}
 
 	return shaked, nil
+}
+
+func checkSpecial(s string) (newRunes []rune, prefix, suffix string) {
+
+	// init output
+	prefix = ""
+	suffix = ""
+
+	// convert to rune
+	runes := []rune(strings.TrimSpace(s))
+
+	if len(runes) <= 1 {
+		return runes, "", ""
+	}
+
+	// check for capsulation
+	// buffer variable to work on
+	var bufferRunes []rune
+	firstRune := runes[0]
+	if unicode.Is(unicode.Ps, firstRune) || unicode.Is(unicode.Pi, firstRune) || unicode.Is(unicode.Po, firstRune) {
+		prefix = string(firstRune)
+		lastRune := runes[len(runes)-1]
+		if unicode.Is(unicode.Pe, lastRune) || unicode.Is(unicode.Pf, lastRune) || unicode.Is(unicode.Po, lastRune) {
+			suffix = string(lastRune)
+			bufferRunes = make([]rune, len(runes)-2)
+			copy(bufferRunes, runes[1:(len(runes)-1)])
+		} else {
+			bufferRunes = make([]rune, len(runes)-1)
+			copy(bufferRunes, runes[1:])
+		}
+	} else {
+		bufferRunes = make([]rune, len(runes))
+		copy(bufferRunes, runes)
+	}
+
+	//exclude ponctuation on bufferRunes
+	lastBufferRune := bufferRunes[len(bufferRunes)-1]
+	if unicode.IsPunct(lastBufferRune) {
+		// check if space before ponctuation
+		if unicode.IsSpace(bufferRunes[len(bufferRunes)-2]) {
+			// new slice to return
+			newRunes = make([]rune, len(bufferRunes)-2)
+			copy(newRunes, bufferRunes[:(len(bufferRunes)-2)])
+			// copy the ponctuation to the suffix
+			suffix = string(bufferRunes[(len(bufferRunes)-2):]) + suffix
+		} else {
+			// new slice to return
+			newRunes = make([]rune, len(bufferRunes)-1)
+			copy(newRunes, bufferRunes[:(len(bufferRunes)-1)])
+			// copy the ponctuation to the suffix
+			suffix = string(lastBufferRune) + suffix
+		}
+	} else {
+		// new slice to return
+		newRunes = make([]rune, len(bufferRunes))
+		copy(newRunes, bufferRunes)
+	}
+
+	return
+
 }
 
 func reverse(s string) (string, error) {
