@@ -321,7 +321,12 @@ func reverse(s string) (string, error) {
 
 	// reverse the word
 	for i := range runes {
-		reverseRunes[len(runes)-i-1] = runes[i]
+		//
+		if unicode.Is(unicode.Ps, runes[i]) || unicode.Is(unicode.Pe, runes[i]) || unicode.Is(unicode.Pi, runes[i]) || unicode.Is(unicode.Pf, runes[i]) || unicode.Is(unicode.Sm, runes[i]) {
+			reverseRunes[len(runes)-i-1] = getOpposite(runes[i])
+		} else {
+			reverseRunes[len(runes)-i-1] = runes[i]
+		}
 	}
 
 	return string(reverseRunes), nil

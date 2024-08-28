@@ -58,6 +58,9 @@ func TestShakeforWord(t *testing.T) {
 		{"A", "wr", "A", ""},
 		{"Ace", "wr", "ecA", ""},
 		{"Hello You!", "wr", "!uoY olleH", ""},
+		{"Hello <You>!", "wr", "!<uoY> olleH", ""},
+		{"Hello (You)!", "wr", "!(uoY) olleH", ""},
+		{"Hello «You»!", "wr", "!«uoY» olleH", ""},
 	}
 
 	for _, tt := range tests {
@@ -88,8 +91,11 @@ func TestShakeforText(t *testing.T) {
 		{"Hello, it’s nice to meet you!", "tzz", "", "unknown parameter, got: tzz"},
 		// reverse mode
 		{"Hello, it’s nice to meet you!", "trz", "", "unknown parameter, got: trz"},
-		{"Hello, it’s nice to meet you!", "tr", "!uoy teem ot ecin s’ti ,olleH", ""},
+		{"Hello, it’s nice to meet you!", "tr", "!uoy teem ot ecin s‘ti ,olleH", ""},
 		{"Hello, it’s nice to meet you!", "trp", "!you meet to nice it’s ,Hello", ""},
+		{"Hello <You>!", "tr", "!<uoY> olleH", ""},
+		{"Hello (You)!", "tr", "!(uoY) olleH", ""},
+		{"Hello «You»!", "tr", "!«uoY» olleH", ""},
 		//shuffle middle word mode
 		{"Give me your gift.", "tm", "Gvie me yuor gfit.", ""},
 		{"Help me!", "tmp", "me! Hlep", ""},
